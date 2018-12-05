@@ -1,10 +1,27 @@
 ## 简介
-> NativeDecrypt用于加载class时解密java字节码文件。
+> NativeDecrypt用于加载class时解密java字节码文件。配合xml使用，使用动态库pugixml处理xml。
+
+## 依赖
+* pugixml动态库
+* enc_config.xml文件
 
 ## 用法
 > libNativeEncrypt.dll用于加密，放到java工程encrypt模块中。
 * 加密
->java -jar NativeEncrypt.jar -src xxx.jar -dst xxx_encrypt.jar
+>java -jar NativeEncrypt.jar [-src xxx.jar -dst xxx_encrypt.jar] 参数可有可无，配合enc_config.xml使用。
+ enc_config.xml格式如下
+ ```xml
+ <?xml version="1.0" encoding="utf-8"?>
+ 
+ <encrypt>
+     <src>src.jar</src>
+     <dst>src_encrypt.jar</dst>
+     <files>
+         <file type="package">com.shell.run</file>
+         <file type="package">com.ft.config</file>
+     </files>
+ </encrypt>
+ ```
 * 解密
 >java -agentlib:libNativeDecrypt xxx_encrypt.jar paramers...
 

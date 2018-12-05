@@ -5,8 +5,11 @@
 #include <iostream>
 #include <cstring>
 
+#include "ParseEncConfig.hpp"
+
 using std::cout;
 using std::endl;
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,7 +33,27 @@ ClassFile_LoadHook(
 
     unsigned char* my_data = *new_class_data;
 
-    if(name && (0 == strncmp(name,"com/ft/decrypt",14)) ) {
+    // 这里会加载所有的class名，所以必须判断哪些class需要解密，不能使用loadall判断
+    bool encrypt = false;//ParseEncConfig::config.encFile.loadall;
+    if ( (!encrypt) && (NULL != name) ) {
+        for ( string file : ParseEncConfig::config.encFile.files ) {
+            int len = file.length();
+            while (len > 0) {
+                len--;
+                char &c = file[len];
+                if ('.' == c) {
+                    c = '/';
+                }
+            }
+
+            if (0 == string(name).compare(0, file.length(), file)) {
+                encrypt = true;
+                break;
+            }
+        }
+    }
+
+    if( (NULL != name) && encrypt ) {
         for (int i = 0; i < class_data_len; ++i) {
             my_data[i] = class_data[i] ^ 0x07;
         }
@@ -73,6 +96,23 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved) {
                 break;
             }
 
+            // 读取配置文件
+            if ( !ParseEncConfig::parse("enc_config.xml") ) {
+                cout << ParseEncConfig::errMsg << endl;
+                jreturn = -100;
+                break;
+            } else {
+                string text;
+                text.append("src=").append(ParseEncConfig::config.src).append("\n")
+                        .append("dst=").append(ParseEncConfig::config.dst).append("\n")
+                        .append("loadall=").append(std::to_string(ParseEncConfig::config.encFile.loadall)).append("\n")
+                        .append("files\n");
+                for (string s : ParseEncConfig::config.encFile.files) {
+                    text.append("    ").append(s).append("\n");
+                }
+                cout << text << endl;
+            }
+
             //设置事件回调
             jvmtiEventCallbacks callbacks;
             (void)memset(&callbacks,0, sizeof(callbacks));
@@ -92,11 +132,12 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved) {
                 break;
             }
 
-            cout << "capabilities.can_access_local_variables = " << capabilities.can_access_local_variables << endl;
+            //cout << "capabilities.can_access_local_variables = " << capabilities.can_access_local_variables << endl;
+            cout << " ok " << endl;
             jreturn = 0;
         }
 
-        cout << "Agent_OnLoad " << "options = " << options << endl;
+        //cout << "Agent_OnLoad " << "options = " << options << endl;
     } while(0);
 
     return jreturn;
@@ -109,7 +150,7 @@ Agent_OnAttach(JavaVM* vm, char* options, void* reserved) {
 
 JNIEXPORT void JNICALL
 Agent_OnUnload(JavaVM *vm) {
-    cout << "---------- Agent_OnUnload ----------" << endl;
+    //cout << "---------- Agent_OnUnload ----------" << endl;
 }
 
 #ifdef __cplusplus

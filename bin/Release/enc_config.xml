@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<encrypt>
+    <src>Decrypt.jar</src>
+    <dst>DecryptEnc.jar</dst>
+    <files>
+        <file type="package">com.ft.decrypt</file>
+    </files>
+</encrypt>
