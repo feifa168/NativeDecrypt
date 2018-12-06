@@ -97,7 +97,12 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved) {
             }
 
             // 读取配置文件
-            if ( !ParseEncConfig::parse("enc_config.xml") ) {
+            string xml = options == NULL ? "" : options;
+            if ( 0 == xml.length() ) {
+                xml = "enc_config.xml";
+            }
+            cout << "parse [" << xml << "]" << endl;
+            if ( !ParseEncConfig::parse(xml) ) {
                 cout << ParseEncConfig::errMsg << endl;
                 jreturn = -100;
                 break;
@@ -137,7 +142,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved) {
             jreturn = 0;
         }
 
-        //cout << "Agent_OnLoad " << "options = " << options << endl;
+        cout << "Agent_OnLoad " << endl;
     } while(0);
 
     return jreturn;
